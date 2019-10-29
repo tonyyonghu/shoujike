@@ -1,0 +1,96 @@
+{extend name="adminblue/base" /}
+{block name="resources"/}
+<style>
+.service-guarantee{text-align: center;width:700px;margin:20px;}
+.service-guarantee input{width:90%;}
+.service-guarantee input.error{border:1px solid #f72424 !important;}
+.table-class{border:1px solid #e5e5e5;}
+</style>
+{/block}
+{block name="alert_info"}
+<p style="margin: 0;">添加成功后，商家服务将会在商品详情中展示</p>
+{/block}
+{block name="main"}
+<div class="service-guarantee">
+	<table class="table-class">
+		<colgroup>
+			<col width="30%">
+			<col width="70%">
+		</colgroup>
+		<tr>
+			<th>标题</th>
+			<th align="left">描述</th>
+		</tr>
+		{foreach name="$list" item="vo"}
+		<tr data-flag="{$vo.id}">
+			<td>
+				<input type="text" placeholder="请输入商家服务标题" class="input-common sg-title" value="{$vo.title}"/>
+			</td>
+			<td align="left">
+				<input type="text" placeholder="请输入商家服务描述" class="input-common sg-describe" value="{$vo.describe}"/>
+			</td>
+		</tr>
+		{/foreach}
+		<tr>
+			<td></td>
+			<td align="left" style="padding: 0;"><button class="btn-common btn-big" style="margin:10px !important;" onclick="save()">保存</button></td>
+		</tr>
+	</table>
+</div>
+<script>
+var is_ok = true;
+$(function(){
+	
+	//商家服务标题验证
+	$(".sg-title").keyup(function(){
+		if($(this).val().length>10){
+			showTip("标题不能超出10个字","warning");
+			$(this).addClass("error");
+			is_ok = false;
+		}else{
+			$(this).removeClass("error");
+			is_ok = true;
+		}
+	});
+	
+	//商家服务描述验证
+	$(".sg-describe").keyup(function(){
+		if($(this).val().length>60){
+			showTip("描述不能超出60个字","warning");
+			$(this).addClass("error");
+			is_ok = false;
+		}else{
+			$(this).removeClass("error");
+			is_ok = true;
+		}
+	});
+});
+function save() {
+	if(!is_ok || $(".table-class input.error").length){
+		showTip("请检查填写的数据是否正确","warning");
+		return;
+	}
+	var value = new Array();
+	$(".service-guarantee .table-class tr[data-flag]").each(function(i){
+		var obj = {
+			"id" : i,
+			"title" : $(this).find(".sg-title").val(),
+			"describe" : $(this).find(".sg-describe").val()
+		};
+		value.push(obj);
+	});
+	$.ajax({
+		type : "post",
+		url : "{:__URL('ADMIN_MAIN/config/merchantService')}",
+		data : { 'value' : JSON.stringify(value) },
+		success : function(data) {
+			if (data["code"] > 0) {
+				showTip(data.message,"success");
+			} else {
+				showTip(data.message,"error");
+			}
+		}
+	});
+}
+</script>
+{/block}

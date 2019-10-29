@@ -1,0 +1,261 @@
+{extend name="adminblue/base" /}
+{block name="resources"/}
+<script type="text/javascript" src="__STATIC__/My97DatePicker/WdatePicker.js"></script>
+<link href="__STATIC__/blue/css/order/ns_orderlist.css" rel="stylesheet" type="text/css" />
+<style>
+.mytable.select td{padding-bottom:0;}
+.mytable.select div{display:inline-block;margin:0 10px 10px 0;}
+.mytable.select #more_search{display: block;}
+.table-class tbody td a {margin-left: 0;}
+.order-tool{display: inline;position: absolute;margin-top: 10px;margin-left: 16px;}
+.to-fixed{position: fixed;width: 85.5%;top: 50px;box-shadow: 0 2px 6px 0 rgba(0,0,0,.3);z-index: 5;}
+td{
+	display: table-cell;
+    vertical-align: inherit;
+    font-weight: bold;
+
+    text-align: center;
+}
+.modal{left:30%;}
+.ordernumss li{float: left;width:8%;height: 2rem;line-height: 2rem;}
+.ordernumss{clear: both;}
+</style>
+{/block}
+<!-- {1block name="thirdmenu"}{/block} -->
+<!-- {1block name="warm_prompt"}{/block} -->
+{block name="right_tab_tip"}{/block}
+{block name="main"}
+<input type="hidden" id="order_id" />
+<input type="hidden" id="print_select_ids" />
+<input type="hidden" id="order_status" value="{$status}" />
+<div style="border:1px solid #e5e5e5;">
+	<table class="mytable select">
+		<tr>
+			<td>
+				<div>
+					<span>下单时间：</span>
+					<input type="text" id="startDate" class="input-common w100" placeholder="请选择开始日期" onclick="WdatePicker()" />
+					&nbsp;-&nbsp;
+					<input type="text" id="endDate" placeholder="请选择结束日期" class="input-common w100" onclick="WdatePicker()" />
+				</div>
+				<div>
+					<span>订单编号：</span>
+					<input id="ordernum" class="input-common w100" type="text" />
+					<input type="button" value="更多搜索" class="btn-common more_search"/>
+					<input class="btn-common" type="button" onclick="searchData()" value="搜索"/>
+					<input class="btn-common" type="button" onclick="dataExcel()" value="导出订单数据"/>
+				</div><br>
+				
+				<span style="display: none;" id="more_search">
+					<div>
+						<span>收货人姓名：</span>
+						<input id="shouhuouser" class="input-common w60" type="text" />
+					</div>
+					<div>
+						<span>收货人手机号：</span>
+						<input id="mobile" class="input-common w100" type="text" />
+					</div>
+					
+				</span>
+			</td>
+		</tr>
+	</table>
+	
+	<div class="divider"></div>
+	
+	<table class="table-class">
+		<colgroup>
+			<col width="10%">
+			<col width="6%">
+			<col width="10%">
+			<col width="8%">
+			<col width="10%">
+			<col width="10%">
+			<col width="15%">
+			<col width="10%">
+			<col width="19%">
+		</colgroup>
+		<thead>
+			<tr align="center">
+				<!-- <div class="order-tool">
+					<input type="checkbox" onclick="CheckAll(this)" id="check">
+					<label for="check">全选</label>
+				</div> -->
+				<th>订单号</th>
+				<th>收货人</th>
+				<th>手机</th>
+				<th>省</th>
+				<th>市</th>
+				<th>区</th>
+				<th>街道</th>
+				<th>订单备注</th>
+				<th>操作</th>
+			</tr>
+		</thead>
+		<tbody>
+			
+		</tbody>
+	</table>
+</div>
+
+{/block}
+{block name="script"}
+
+<!--  {include file="adminblue/Ordernum/ordernumAction"/}
+
+{include file="adminblue/Ordernum/orderRefundAction"/}
+
+{include file="adminblue/Ordernum/orderPrintAction"/} -->
+<script type="text/javascript">
+$(window).scroll(function(){
+	var scrollTop = $(window).scrollTop();
+	if(scrollTop > 140){
+		$("nav.order-nav").addClass("to-fixed");
+	}else{
+		$("nav.order-nav").removeClass("to-fixed");
+	}
+})
+$(function () { 
+	$("[data-toggle='popover']").popover();
+});
+//searchData();
+
+function searchData(){
+	LoadingInfo(1);
+}
+
+function LoadingInfo(page_index) {
+	var start_date = $("#startDate").val();
+	var end_date = $("#endDate").val();
+	var ordernum = $("#ordernum").val();
+	var mobile = $("#mobile").val();
+	var shouhuouser = $("#shouhuouser").val();
+	$.ajax({
+		type : "post",
+		url : "{:__URL('ADMIN_MAIN/ordernum/ordernumlist')}",
+		data : {
+			"page_index" : page_index,
+			"page_size" : $("#showNumber").val(),
+			"start_date" : start_date,
+			"end_date" : end_date,
+			"ordernum" : ordernum,
+			"mobile" : mobile,
+			"shouhuouser" : shouhuouser
+		},
+		success : function(data) {
+			//console.log(data);
+			//console.log(data['data'].length);
+			var html = '';
+			if (data["total_count"] > 0) {
+				for (var i = 0; i < data["data"].length; i++) {
+					var ordernum=data['data'][i]['ordernum'];
+					var shouhuouser=data['data'][i]['shouhuouser'];
+					var mobile=data['data'][i]['mobile'];
+					var province=data['data'][i]['province'];
+					var city=data['data'][i]['city'];
+					var area=data['data'][i]['area'];
+					var address=data['data'][i]['address'];
+					var descs=data['data'][i]['descs'];
+					if(descs==""||descs==null){
+						descs="";
+					}
+					html += '<tr class="title-tr">';
+					html += '<td>'+ordernum+'</td>';
+					html += '<td>'+shouhuouser+'</td>';
+					html += '<td>'+mobile+'</td>';
+					html += '<td>'+province+'</td>';
+					html += '<td>'+city+'</td>';
+					html += '<td>'+area+'</td>';
+					html += '<td>'+address+'</td>';
+					html += '<td>'+descs+'</td>';
+					html += '<td>'+'<a href="ADMIN_MAIN/ordernum/ordernumedit?id='+data['data'][i]['id']+'">'+'修改</a>&nbsp;&nbsp;<button class="btn ordernuminfo" ordernum="'+ordernum+'" data-toggle="modal" data-target="#myModal'+data['data'][i]['id']+'">查看</button><div class="modal fade" id="myModal'+data['data'][i]['id']+'" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true"><div class="modal-dialog"><div class="modal-content"><div class="modal-body"></div><div class="modal-footer"><button type="button" class="btn btn-default" data-dismiss="modal">关闭</button></div></div></div></div>&nbsp;&nbsp;<a href="ADMIN_MAIN/ke/addke?id='+data['data'][i]['id']+'">添加手机壳</a></td>';
+					html +="</tr>";
+				}
+			}
+			else
+			{
+				html += '<tr align="center"><td colspan="9">暂无符合条件的订单</td></tr>';
+			}
+			$(".table-class tbody").html(html);
+			initPageData(data["page_count"],data['total_count'],data['total_count']);
+			$("#pageNumber").html(pagenumShow(jumpNumber,$("#page_count").val(),{$pageshow}));
+		}
+	});
+}
+
+function addmemo(order_id,memo){
+	$("#order_id").val(order_id);
+	$("#memo").val(memo);
+	$("#Memobox").modal("show");
+}
+
+/**
+ * 订单数据导出
+ */
+
+function dataExcel(){
+	var start_date = $("#startDate").val();
+	var end_date = $("#endDate").val();
+	var shouhuouser = $("#shouhuouser").val();
+	var ordernum = $("#ordernum").val();
+	var mobile = $("#mobile").val();
+	
+	window.location.href=__URL("ADMIN_MAIN/ordernum/orderDataExcel?start_date="+start_date+"&end_date="+end_date+"&shouhuouser="+shouhuouser+"&ordernum="+ordernum+"&mobile="+mobile); 	
+}
+// 点击显示更多搜索
+$(".more_search").click(function(){
+	$("#more_search").slideToggle();
+})
+
+$(".ordernuminfo").live('click',function(){
+	//console.log($(".ordernuminfo").index($(this)));
+	var ordernum=$(".ordernuminfo").eq($(".ordernuminfo").index($(this))).attr("ordernum");
+	var myModal=$(".ordernuminfo").eq($(".ordernuminfo").index($(this))).next().attr("id");
+	
+	$.ajax({
+		type : "post",
+		url : "{:__URL('ADMIN_MAIN/ordernum/ordernuminfo')}",
+		data : {
+			"ordernum" : ordernum
+		},
+		success : function(data) {
+			console.log(data);
+			var html="<ul class='ordernumss'><li>日期</li><li>订单号</li><li>型号</li><li>数量</li><li>材质</li><li>零售单价</li><li>成本单价</li><li>邮费</li><li>分润单价</li><li>利润</li><li>分类</li><li>备注</li></ul>";
+			//console.log(data);
+			if(data['data'].length>0){
+				// for(var i=0;i<data['data'].length;i++){
+				// 	html+=data['data'][i]['id'];
+				// }
+				for(var i=0;i<data['data'].length;i++){
+					html+="<ul class='ordernumss'>";
+					html+="<li>"+data['data'][i]['ordertime']+"</li>";
+					html+="<li>"+data['data'][i]['ordernum']+"</li>";
+					html+="<li>"+data['data'][i]['xinghao']+"</li>";
+					html+="<li>"+data['data'][i]['num']+"</li>";
+					html+="<li>"+data['data'][i]['caizhi']+"</li>";
+					html+="<li>"+data['data'][i]['price']+"</li>";
+					html+="<li>"+data['data'][i]['chengben']+"</li>";
+					html+="<li>"+data['data'][i]['youfei']+"</li>";
+					html+="<li>"+data['data'][i]['fenrunprice']+"</li>";
+					html+="<li>"+data['data'][i]['lirun']+"</li>";
+					html+="<li>"+data['data'][i]['categoryname']+"</li>";
+					html+="<li>"+data['data'][i]['descs']+"</li>";
+					html+="</ul>";
+				}
+
+			}
+			else{
+				html+="<h5 style='clear:both;'>暂无符合条件的数据</h5>";
+			}
+			//console.log(html);
+			$("#"+myModal+">.modal-dialog>.modal-content>.modal-body").html(html);
+			
+			
+		}
+	});
+
+
+});
+	
+</script>
+{/block}

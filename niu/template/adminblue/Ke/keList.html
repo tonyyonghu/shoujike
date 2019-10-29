@@ -1,0 +1,283 @@
+{extend name="adminblue/base" /}
+{block name="resources"/}
+<script type="text/javascript" src="__STATIC__/My97DatePicker/WdatePicker.js"></script>
+<link href="__STATIC__/blue/css/order/ns_orderlist.css" rel="stylesheet" type="text/css" />
+<style>
+.mytable.select td{padding-bottom:0;}
+.mytable.select div{display:inline-block;margin:0 10px 10px 0;}
+.mytable.select #more_search{display: block;}
+.table-class tbody td a {margin-left: 0;}
+.order-tool{display: inline;position: absolute;margin-top: 10px;margin-left: 16px;}
+.to-fixed{position: fixed;width: 85.5%;top: 50px;box-shadow: 0 2px 6px 0 rgba(0,0,0,.3);z-index: 5;}
+</style>
+{/block}
+<!-- {1block name="thirdmenu"}{/block} -->
+<!-- {1block name="warm_prompt"}{/block} -->
+{block name="right_tab_tip"}{/block}
+{block name="main"}
+<input type="hidden" id="order_id" />
+<input type="hidden" id="print_select_ids" />
+<input type="hidden" id="order_status" value="{$status}" />
+<div style="border:1px solid #e5e5e5;">
+	<table class="mytable select">
+		<tr>
+			<td>
+				<div>
+					<span>手机壳下单时间：</span>
+					<input type="text" id="startDate" class="input-common w100" placeholder="请选择开始日期" onclick="WdatePicker()" />
+					&nbsp;-&nbsp;
+					<input type="text" id="endDate" placeholder="请选择结束日期" class="input-common w100" onclick="WdatePicker()" />
+				</div>
+				<div>
+					<span>手机壳材质：</span>
+					<input id="caizhi" class="input-common w100" type="text" />
+					<input type="button" value="更多搜索" class="btn-common more_search"/>
+					<input class="btn-common" type="button" onclick="searchData()" value="搜索"/>
+					<input class="btn-common" type="button" onclick="dataExcel()" value="导出数据"/>
+				</div><br>
+				<span style="display: none;" id="more_search">
+					<div>
+						<span>手机型号：</span>
+						<input id="xinghao" class="input-common w60" type="text" />
+					</div>
+					<div>
+						<span>订单号：</span>
+						<input id="ordernum" class="input-common w100" type="text" />
+					</div>
+					<div>
+						<span>壁纸类型：</span>
+						<select id="category"  class="select-common w100">
+							{volist name="category" id="vo"}
+							<option value="{$vo.category_id}">{$vo.category_name}</option>
+							{/volist}
+						</select>
+						
+					</div>
+					
+				</span>
+			</td>
+		</tr>
+	</table>
+	
+	<div class="divider"></div>
+	
+	<table class="table-class">
+		<colgroup>
+			<col width="8%">
+			<col width="5%">
+			<col width="5%">
+			<col width="5%">
+			<col width="5%">
+			<col width="5%">
+			<col width="6%">
+			<col width="5%">
+			<col width="5%">
+			<col width="8%">
+			<col width="8%">
+			<col width="10%">
+			<col width="8%">
+		</colgroup>
+		<thead>
+			<tr align="center">
+				<th>型号</th>
+				<th>数量</th>
+				<th>材质</th>
+				<th>价格</th>
+				<th>成本</th>
+				<th>邮费</th>
+				<th>分润价格</th>
+				<th>利润</th>
+				<th>备注</th>
+				<th>下单时间</th>
+				<th>订单号</th>
+				<th>分类</th>
+				<th>操作</th>
+			</tr>
+		</thead>
+		<tbody></tbody>
+	</table>
+</div>
+
+{/block}
+{block name="script"}
+
+{include file="adminblue/Order/orderAction"/}
+{include file="adminblue/Order/orderRefundAction"/}
+<!-- 订单打印 -->
+{include file="adminblue/Order/orderPrintAction"/}
+<script type="text/javascript">
+$(window).scroll(function(){
+	var scrollTop = $(window).scrollTop();
+	if(scrollTop > 140){
+		$("nav.order-nav").addClass("to-fixed");
+	}else{
+		$("nav.order-nav").removeClass("to-fixed");
+	}
+})
+$(function () { 
+	$("[data-toggle='popover']").popover();
+});
+function searchData(){
+	LoadingInfo(1);
+}
+
+function LoadingInfo(page_index) {
+	var start_date = $("#startDate").val();
+	var end_date = $("#endDate").val();
+	var caizhi = $("#caizhi").val();
+	var xinghao = $("#xinghao").val();
+	var ordernum = $("#ordernum").val();
+	var category = $("#category").val();
+	$.ajax({
+		type : "post",
+		url : "{:__URL('ADMIN_MAIN/ke/kelist')}",
+		data : {
+			"page_index" : page_index,
+			"page_size" : $("#showNumber").val(),
+			"start_date" : start_date,
+			"end_date" : end_date,
+			"caizhi" : caizhi,
+			"xinghao" : xinghao,
+			'ordernum' : ordernum,
+			"category" : category
+			
+		},
+		success : function(data) {
+			//alert(JSON.stringify(data["data"][1]['order_item_list']));
+			var html = '';
+			if (data["total_count"] > 0) {
+				for (var i = 0; i < data["data"].length; i++) {
+					var xinghao=data['data'][i]['xinghao'];
+					var num=data['data'][i]['num'];
+					var caizhi=data['data'][i]['caizhi'];
+					var price=data['data'][i]['price'];
+					var chengben=data['data'][i]['chengben'];
+					var youfei=data['data'][i]['youfei'];
+					var fenrunprice=data['data'][i]['fenrunprice'];
+					var lirun=data['data'][i]['lirun'];
+					var descs=data['data'][i]['descs'];
+					if(descs==""||descs==null){
+						descs="";
+					}
+
+					var ordertime=data['data'][i]['ordertime'];
+					var ordernum=data['data'][i]['ordernum'];
+					var category=data['data'][i]['categoryname'];
+					var ss="";
+					if(caizhi==1){
+						ss="磨砂";
+					}
+					if(caizhi==2){
+						ss="玻璃";
+					}
+					html += '<tr class="title-tr"  align="center">';
+					html += '<td>'+xinghao+'</td>';
+					html += '<td>'+num+'</td>';
+					html += '<td>'+ss+'</td>';
+					html += '<td>'+price+'</td>';
+					html += '<td>'+chengben*num+'</td>';
+					html += '<td>'+youfei+'</td>';
+					html += '<td>'+fenrunprice+'</td>';
+					html += '<td>'+lirun+'</td>';
+					html += '<td>'+descs+'</td>';
+					html += '<td>'+ordertime+'</td>';
+					html += '<td>'+ordernum+'</td>';
+					html += '<td>'+category+'</td>';
+					html += '<td>'+'<a href="ADMIN_MAIN/ke/keedit?id='+data['data'][i]['id']+'">'+'修改</a>&nbsp;&nbsp;<a  href="javascript:deleteke('+data['data'][i]['id']+')">删除</a></td>';
+					html +="</tr>";
+				}
+			}
+			else
+			{
+				html += '<tr align="center"><td colspan="9">暂无符合条件的订单</td></tr>';
+			}
+			$(".table-class tbody").html(html);
+			initPageData(data["page_count"],data['total_count'],data['total_count']);
+			$("#pageNumber").html(pagenumShow(jumpNumber,$("#page_count").val(),{$pageshow}));
+		}
+	});
+}
+
+function addmemo(order_id,memo){
+	$("#order_id").val(order_id);
+	$("#memo").val(memo);
+	$("#Memobox").modal("show");
+}
+
+/**
+ * 删除手机壳
+ */
+ 
+ function deleteke(id){
+ 	$("#dialog").dialog({
+		buttons:{
+			"确定":function(){
+				$.ajax({
+					type:'post',
+					url:"{:__URL('ADMIN_MAIN/ke/deleteke')}",
+					data:{'id':id},
+					dataType:'json',
+					success:function(data){
+						console.log(data);
+						if(data['code']>0){
+							showMessage('success', "手机壳删除成功",__URL(ADMINMAIN+'/ke/kelist'));
+						}
+						if(data['code']==0){
+							showMessage('error', "手机壳删除失败",__URL(ADMINMAIN+'/ke/kelist'));
+						}
+					}
+				});
+				$(this).dialog('close');
+			},
+			"取消":function(){
+				$(this).dialog('close');
+			},
+		},
+		contentText:"确定要删除吗",
+	});
+ }
+
+
+/**
+ * 订单数据导出
+ */
+function dataExcel(){
+	var start_date = $("#startDate").val();
+	var end_date = $("#endDate").val();
+	var caizhi = $("#caizhi").val();
+	var xinghao = $("#xinghao").val();
+	var category = $("#category").val();
+	
+	window.location.href=__URL("ADMIN_MAIN/ke/orderDataExcel?start_date="+start_date+"&end_date="+end_date+"&caizhi="+caizhi+"&xinghao="+xinghao+"&category="+category); 	
+}
+
+/**
+* 批量删除已关闭订单
+*/
+function batchDelete(){
+	var order_ids= new Array();
+	$(".table-class tbody input[type = 'checkbox']:checked").each(function() {
+		if (!isNaN($(this).val())) {
+			order_ids.push($(this).val());
+		}
+	});
+	if(order_ids.length ==0){
+		$( "#dialog" ).dialog({
+			buttons: {
+				"确定,#e57373": function() {
+					$(this).dialog('close');
+				}
+			},
+			contentText:"请选择需要操作的记录",
+			title:"消息提醒",
+		});
+		return false;
+	}
+	delete_order(order_ids);
+}
+// 点击显示更多搜索
+$(".more_search").click(function(){
+	$("#more_search").slideToggle();
+})
+</script>
+{/block}

@@ -1,0 +1,67 @@
+{extend name="adminblue/base" /}
+{block name="resources"/}{/block}
+{block name="main"}
+<table class="mytable">
+	<tr>
+		<th width="10%">
+			<input type="text" id = 'search_text' placeholder="请输入活动名称" class="input-common" />
+			<input type="button" onclick="searchData()" value="搜索" class="btn-common" />
+		</th>
+	</tr>
+</table>
+<table class="table-class">
+	<thead>
+		<tr align="center">
+			<th align="left">赠品名称</th>
+			<th align="left">发放商品信息</th>
+			<th>发放类型</th>
+			<th>发放用户</th>
+			<th>发放时间</th>
+			<th>备注</th>
+		</tr>
+	</thead>
+	<tbody></tbody>
+</table>
+
+{/block}
+{block name="script"}
+<script type="text/javascript">
+function LoadingInfo(page_index) {
+	var search_text = $("#search_text").val();
+	$.ajax({
+		type : "post",
+		url : "{:__URL('ADMIN_MAIN/promotion/giftGrantRecordsList')}",
+		data : {
+			"page_index" : page_index,
+			"page_size" : $("#showNumber").val(),
+			"search_text" : search_text
+		},
+		success : function(data) {
+			var html = '';
+			if (data["data"].length > 0) {
+				for (var i = 0; i < data["data"].length; i++) {
+					var current = data['data'][i];
+					html += '<tr>';
+						html += '<td align="left">' + current.gift_name + '</td>';
+						html += '<td><img src="' + __IMG(current.pic_cover_mid) + '" width="45px"/>' + current.goods_name + '</td>';
+						html += '<td align="center">' + current.type_name + '</td>';
+						html += '<td align="center">' + current.nick_name + '</td>';
+						html += '<td align="center">' + timeStampTurnTime(current.create_time) + '</td>';
+						html += '<td align="center">' + current.remark + '</td>';
+					html += '</tr>';
+				}
+			} else {
+				html += '<tr align="center"><td colspan="6">暂无符合条件的数据记录</td></tr>';
+			}
+			$(".table-class tbody").html(html);
+			initPageData(data["page_count"],data['data'].length,data['total_count']);
+			$("#pageNumber").html(pagenumShow(jumpNumber,$("#page_count").val(),{$pageshow}));
+		}
+	});
+}
+
+function searchData(){
+	LoadingInfo(1);
+}
+</script>
+{/block}

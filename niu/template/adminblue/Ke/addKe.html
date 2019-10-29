@@ -1,0 +1,245 @@
+{extend name="adminblue/base" /}
+{block name="resources"/}
+<script src="ADMIN_JS/art_dialog.source.js"></script>
+<script src="ADMIN_JS/iframe_tools.source.js"></script>
+<script src="ADMIN_JS/material_managedialog.js"></script>
+<script type="text/javascript" src="__STATIC__/My97DatePicker/WdatePicker.js"></script>
+<link rel="stylesheet" type="text/css" href="ADMIN_CSS/defau.css">
+
+<link rel="stylesheet" type="text/css" href="ADMIN_CSS/city-picker.css">
+
+
+
+
+{/block}
+{block name="main"}
+<div class="set-style">
+	<dl>
+		<dt><span class="color-red">*</span>订单号码:</dt>
+		<dd>
+			<p><input id="ordernum" type="text" value="{$ordernum}" class="input-common"></p>
+			<p class="error">请输入订单号码</p>
+		</dd>
+	</dl>
+
+	<dl>
+		<dt><span class="color-red">*</span>添加时间:</dt>
+		<dd>
+			<p><input type="text" id="startDate" class="input-common" value="{$ordertime|date='Y-m-d H:i:s',###}" placeholder="请选择添加日期" onclick="WdatePicker({dateFmt: 'yyyy-M-d H:mm:ss'})" /></p>
+			<p class="error">请选择添加时间</p>
+		</dd>
+	</dl>
+
+	<dl>
+		<dt><span class="color-red">*</span>型号:</dt>
+		<dd>
+			<p><input id="xinghao" type="text" class="input-common"></p>
+			<p class="error">请输入手机型号</p>
+		</dd>
+	</dl>
+
+	<dl>
+		<dt><span class="color-red">*</span>数量:</dt>
+		<dd>
+			<p><input id="num" type="text" value="1" class="input-common"></p>
+			<p class="error">请输入购买数量</p>
+		</dd>
+	</dl>
+
+
+	<dl>
+		<dt><span class="color-red">*</span>材质:</dt>
+		<dd>
+			<select id="caizhi"  class="select-common w100">
+				<option value="1">磨砂</option>
+				<option value="2">玻璃</option>
+			</select>
+		</dd>
+	</dl>
+
+	<dl>
+		<dt><span class="color-red">*</span>壁纸类型:</dt>
+		<dd>
+			<select id="category"  class="select-common w100">
+				{volist name="category" id="vo"}
+				<option value="{$vo.category_id}">{$vo.category_name}</option>
+				{/volist}
+			</select>
+		</dd>
+	</dl>
+
+	
+
+	<dl>
+		<dt><span class="color-red">*</span>分润单价:</dt>
+		<dd>
+			<p><input id="fenrunprice" type="text" class="input-common"><span class="color-red">&nbsp;&nbsp;(若无分润单价，则输入0)</p>
+			<p class="error">分润单价</p>
+		</dd>
+	</dl>
+
+	<dl>
+		<dt><span class="color-red">*</span>零售:</dt>
+		<dd>
+			<p><input id="price" type="text" class="input-common"><span class="color-red">&nbsp;&nbsp;(若是发顺丰的话，零售不要加15，后台程序自己处理)</p>
+			<p class="error">请输入零售</p>
+		</dd>
+	</dl>
+
+	<dl>
+		<dt><span class="color-red">*</span>成本:</dt>
+		<dd>
+			<p><input id="chengben" type="text" value="4" class="input-common"></p>
+			<p class="error">请输入成本</p>
+		</dd>
+	</dl>
+
+	<dl>
+		<dt><span class="color-red">*</span>是否顺丰:</dt>
+		<dd>
+			<p><input type="radio" name="isshunfeng"  value="1">是&nbsp;&nbsp;&nbsp;<input type="radio" name="isshunfeng"  value="0" checked> 否</p>
+		</dd>
+	</dl>
+
+	<dl>
+		<dt><span class="color-red">*</span>邮费:</dt>
+		<dd>
+			<p><input id="youfei" type="text" value="4" class="input-common"><span class="color-red">&nbsp;&nbsp;(若是发顺丰邮费输入7)</span></p>
+			<p class="error">请输入邮费价格</p>
+		</dd>
+	</dl>
+
+	<dl>
+		<dt><span class="color-red">*</span>订单备注:</dt>
+		<dd>
+			<p><input id="descs" type="text" class="input-common"></p>
+			<p class="error">请输入订单备注</p>
+		</dd>
+	</dl>
+
+	
+	
+	<dl>
+		<dt></dt>
+		<dd><button class="btn-common btn-big" onclick="addGoodsGroupAjax();">提交</button></dd>
+	</dl>
+</div>
+<script type="text/javascript">
+
+	var category_id=$("#category").val();
+	$.ajax({
+			type : "post",
+			url : __URL(ADMINMAIN+"/ke/categoryFenprice"),
+			data : {
+				'category_id' : category_id
+			},
+			success:function(data){
+				$("#fenrunprice").val(data['fenrunprice']);
+			}
+		});
+
+	$("#caizhi").change(function(){
+		var caizhi = $("#caizhi").val();
+
+		if(caizhi==1){
+			$("#chengben").val(4);
+		}
+		if(caizhi==2){
+			$("#chengben").val(9);
+		}
+	});
+
+	$("#category").change(function(){
+		var categoryid = $("#category").val();
+		$.ajax({
+			type : "post",
+			url : __URL(ADMINMAIN+"/ke/categoryFenprice"),
+			data : {
+				'category_id' : categoryid
+			},
+			success:function(data){
+				$("#fenrunprice").val(data['fenrunprice']);
+			}
+		});
+		
+	});
+
+	
+
+
+	//模块输入信息验证
+function verify(group_name){
+	if(group_name == ''){
+		$("#ordernum").parent().next().show();
+		$("#ordernum").focus();
+		return false;
+	}else{
+		$(".error").hide();
+	}
+	return true;
+}
+
+var flag = false;//防止重复提交
+//添加模块
+function addGoodsGroupAjax() {
+	var ordernum = $("#ordernum").val();
+	var startDate = $("#startDate").val();
+	var xinghao = $("#xinghao").val();
+	var num = $("#num").val();
+	var caizhi = $("#caizhi").val();
+	var category = $("#category").val();
+	var price = $("#price").val();
+	var chengben = $("#chengben").val();
+	var youfei = $("#youfei").val();
+	var fenrunprice = $("#fenrunprice").val();
+	var descs = $("#descs").val();
+	var shunfeng = $('input:radio:checked').val();
+
+
+
+//	if($("#is_visible").prop("checked")){
+//		var is_visible = 1;
+//	}else{
+//		var is_visible = 0;
+//	}
+	
+	if(verify(ordernum)){
+		if(flag){
+			return false;
+		}
+		flag = true;
+		$.ajax({
+			type : "post",
+			url : __URL(ADMINMAIN+"/ke/addke"),
+			data : {
+				'ordernum' : ordernum,
+				'start_date' : startDate,
+				'xinghao' : xinghao,
+				'num' : num,
+				'caizhi' : caizhi,
+				'category' : category,
+				'price' : price,
+				'chengben' : chengben,
+				'youfei' : youfei,
+				'fenrunprice' : fenrunprice,
+				'shunfeng' : shunfeng,
+				'descs' : descs
+			},
+			success : function(data) {
+				
+				if (data["code"] > 0) {
+					showMessage('success', "手机壳添加成功",__URL(ADMINMAIN+'/ke/kelist'));
+				}else{
+					showMessage('error', "手机壳添加失败");
+					flag = false;
+				}
+			}
+		});
+	}
+}
+
+</script>
+<script src="ADMIN_JS/city-picker.data.js"></script>
+<script src="ADMIN_JS/city-picker.js"></script>
+<script src="ADMIN_JS/main.js"></script>
+{/block}

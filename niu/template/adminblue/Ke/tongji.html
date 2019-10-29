@@ -1,0 +1,223 @@
+{extend name="adminblue/base" /}
+{block name="resources"/}
+<script type="text/javascript" src="__STATIC__/My97DatePicker/WdatePicker.js"></script>
+<link href="__STATIC__/blue/css/order/ns_orderlist.css" rel="stylesheet" type="text/css" />
+<style>
+.mytable.select td{padding-bottom:0;}
+.mytable.select div{display:inline-block;margin:0 10px 10px 0;}
+.mytable.select #more_search{display: block;}
+.table-class tbody td a {margin-left: 0;}
+.order-tool{display: inline;position: absolute;margin-top: 10px;margin-left: 16px;}
+.to-fixed{position: fixed;width: 85.5%;top: 50px;box-shadow: 0 2px 6px 0 rgba(0,0,0,.3);z-index: 5;}
+</style>
+{/block}
+<!-- {1block name="thirdmenu"}{/block} -->
+<!-- {1block name="warm_prompt"}{/block} -->
+{block name="right_tab_tip"}{/block}
+{block name="main"}
+<input type="hidden" id="order_id" />
+<input type="hidden" id="print_select_ids" />
+<input type="hidden" id="order_status" value="{$status}" />
+<div style="border:1px solid #e5e5e5;">
+	<table class="mytable select">
+		<tr>
+			<td>
+				<div>
+					<span>手机壳下单时间：</span>
+					<input type="text" id="startDate" class="input-common w100" placeholder="请选择开始日期" onclick="WdatePicker()" />
+					&nbsp;-&nbsp;
+					<input type="text" id="endDate" placeholder="请选择结束日期" class="input-common w100" onclick="WdatePicker()" />
+				</div>
+				<div>
+					<input class="btn-common" type="button" onclick="searchtongjiData()" value="搜索"/>
+					<input class="btn-common" type="button" onclick="dataExcel()" value="导出数据"/>
+				</div><br>
+			</td>
+		</tr>
+	</table>
+	
+	<div class="divider"></div>
+	
+	<table class="table-class">
+		<colgroup>
+			<col width="19%">
+			<col width="9%">
+			<col width="6%">
+			<col width="9%">
+			<col width="9%">
+			<col width="9%">
+			<col width="9%">
+			<col width="9%">
+			<col width="9%">
+			<col width="9%">
+			<col width="9%">
+		</colgroup>
+		<thead>
+			<tr align="center">
+				<th>日期</th>
+				<th>项目</th>
+				<th>营业额</th>
+				<th>材质</th>
+				<th>数量</th>
+				<th>成本单价</th>
+				<th>成本支出</th>
+				<th>分润单价</th>
+				<th>总分润</th>
+				<th>结余</th>
+				<th>备注</th>
+			</tr>
+		</thead>
+		<tbody>
+			{volist name="list" id="vo"}
+				<tr align="center">
+					<td rowspan="3">{$vo.date}</td>
+					<td rowspan="3">{$vo.categoryname}</td>
+					<td rowspan="3">{$vo.allprice}</td>
+					<td>{$vo.mosha}</td>
+					<td>{$vo.moshanum}</td>
+					<td>{$vo.moshachengben}</td>
+					<td rowspan="3">{$vo.chengben}</td>
+					<td rowspan="3">{$vo.fenrunprice}</td>
+					<td rowspan="3">{$vo.allfenrun}</td>
+					<td rowspan="3">{$vo.jieyu}</td>
+					<td rowspan="3"></td>
+			</tr>
+			<tr align="center">
+				<td>{$vo.boli}</td>
+				<td>{$vo.bolinum}</td>
+				<td>{$vo.bolichengben}</td>
+			</tr>
+			<tr align="center">
+				<td>邮费</td>
+				<td colspan="2" style="border-bottom:1px solid #ddd;">{$vo.youfei}</td>
+			</tr>
+			{/volist}
+			<tr align="center">
+				<td></td>
+				<td>统计</td>
+				<td>{$totalprice}</td>
+				<td></td>
+				<td>{$totalnum}</td>
+				<td></td>
+				<td>{$totalchengben}</td>
+				<td></td>
+				<td>{$totalfenrun}</td>
+				<td>{$totaljieyu}</td>
+				<td></td>
+			</tr>
+			
+		</tbody>
+	</table>
+</div>
+
+{/block}
+{block name="script"}
+
+{include file="adminblue/Order/orderAction"/}
+{include file="adminblue/Order/orderRefundAction"/}
+<!-- 订单打印 -->
+{include file="adminblue/Order/orderPrintAction"/}
+<script type="text/javascript">
+$(window).scroll(function(){
+	var scrollTop = $(window).scrollTop();
+	if(scrollTop > 140){
+		$("nav.order-nav").addClass("to-fixed");
+	}else{
+		$("nav.order-nav").removeClass("to-fixed");
+	}
+})
+$(function () { 
+	$("[data-toggle='popover']").popover();
+});
+
+
+function searchtongjiData(){
+	$(".table-class tbody").html('');
+	loadtongjiinfo();
+}
+
+function loadtongjiinfo(){
+	var start_date = $("#startDate").val();
+	var end_date = $("#endDate").val();
+
+	$.ajax({
+		type : "post",
+		url : "{:__URL('ADMIN_MAIN/ke/tongji')}",
+		data : {
+			"start_date" : start_date,
+			"end_date" : end_date
+		},
+		success:function(data){
+			
+			var html = '';
+			for(var i=0;i<data['data'].length;i++){
+				html+="<tr align='center'>";
+				html+="<td rowspan='3'>"+data['data'][i].date+"</td>";
+				html+="<td rowspan='3'>"+data['data'][i].categoryname+"</td>";
+				html+="<td rowspan='3'>"+data['data'][i].allprice+"</td>";
+				html+="<td>"+data['data'][i].mosha+"</td>";
+				html+="<td>"+data['data'][i].moshanum+"</td>";
+				html+="<td>"+data['data'][i].moshachengben+"</td>";
+				html+="<td rowspan='3'>"+data['data'][i].chengben+"</td>";
+				html+="<td rowspan='3'>"+data['data'][i].fenrunprice+"</td>";
+				html+="<td rowspan='3'>"+data['data'][i].allfenrun+"</td>";
+				html+="<td rowspan='3'>"+data['data'][i].jieyu+"</td>";
+				html+="<td rowspan='3'></td>";
+				html+="</tr>";
+
+				html+="<tr align='center'>";
+				html+="<td>"+data['data'][i].boli+"</td>";
+				html+="<td>"+data['data'][i].bolinum+"</td>";
+				html+="<td>"+data['data'][i].bolichengben+"</td>";
+				html+="</tr>";
+
+				html+="<tr>";
+				html+="<td>邮费</td>";
+				html+="<td>"+data['data'][i].youfei+"</td>";
+				html+="</tr>";
+
+			}
+
+			
+			html+="<tr align='center'>";
+			html+="<td></td>";
+			html+="<td>统计</td>";
+			html+="<td>"+data['aa']['totalprice']+"</td>";
+			html+="<td></td>";
+			html+="<td>"+data['aa']['totalnum']+"</td>";
+			html+="<td></td>";
+			html+="<td>"+data['aa']['totalchengben']+"</td>";
+			html+="<td></td>";
+			html+="<td>"+data['aa']['totalfenrun']+"</td>";
+			html+="<td>"+data['aa']['totaljieyu']+"</td>";
+			html+="<td></td>";
+			html+="</tr>";
+			$(".table-class tbody").html(html);
+
+		}
+	});
+}
+
+
+
+
+
+
+/**
+ * 订单数据导出
+ */
+
+function dataExcel(){
+	var start_date = $("#startDate").val();
+	var end_date = $("#endDate").val();
+	
+	window.location.href=__URL("ADMIN_MAIN/ke/tongjiDataExcel?start_date="+start_date+"&end_date="+end_date); 	
+}
+
+
+// 点击显示更多搜索
+$(".more_search").click(function(){
+	$("#more_search").slideToggle();
+})
+</script>
+{/block}

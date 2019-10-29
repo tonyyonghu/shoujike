@@ -1,0 +1,28 @@
+@CHARSET "UTF-8";
+
+.motify {
+	position: fixed;
+	top: 50%;
+	left: 50%;
+	width: 220px;
+	padding: 0;
+	margin: 0 0 0 -110px;
+	z-index: 9999;
+	background: rgba(0, 0, 0, 0.5);
+	color: #fff;
+	font-size: 14px;
+	line-height: 1.5em;
+	border-radius: 3px;
+	opacity: 0.9;
+	transform: translateY(-50%);
+	-ms-transform: translateY(-50%); /* IE 9 */
+	-moz-transform: translateY(-50%); /* Firefox */
+	-webkit-transform: translateY(-50%); /* Safari 和 Chrome */
+	-o-transform: translateY(-50%);
+}
+
+.motify .motify-inner {
+	padding: 7px 10px;
+	text-align: center;
+	word-wrap: break-word;
+}

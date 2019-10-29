@@ -1,0 +1,160 @@
+{extend name="adminblue/base" /}
+{block name="resources"/}
+<script src="ADMIN_JS/art_dialog.source.js"></script>
+<script src="ADMIN_JS/iframe_tools.source.js"></script>
+<script src="ADMIN_JS/material_managedialog.js"></script>
+<script type="text/javascript" src="__STATIC__/My97DatePicker/WdatePicker.js"></script>
+<link rel="stylesheet" type="text/css" href="ADMIN_CSS/defau.css">
+
+<link rel="stylesheet" type="text/css" href="ADMIN_CSS/city-picker.css">
+
+
+
+
+{/block}
+{block name="main"}
+<div class="set-style" style="height: 1100px;">
+	<dl>
+		<dt><span class="color-red">*</span>订单号码:</dt>
+		<dd>
+			<p><input id="ordernum" type="text" class="input-common"></p>
+			<p class="error">请输入订单号码</p>
+		</dd>
+	</dl>
+
+	<dl>
+		<dt><span class="color-red">*</span>下单时间:</dt>
+		<dd>
+			<p><input type="text" id="startDate" class="input-common" placeholder="请选择开始日期" onclick="WdatePicker({dateFmt: 'yyyy-M-d H:mm:ss'})" /></p>
+			<p class="error">请选择下单时间</p>
+		</dd>
+	</dl>
+
+	<dl>
+		<dt><span class="color-red">*</span>收货人:</dt>
+		<dd>
+			<p><input id="shouhuouser" type="text" class="input-common"></p>
+			<p class="error">请输入收货人</p>
+		</dd>
+	</dl>
+
+	<dl>
+		<dt><span class="color-red">*</span>手机号:</dt>
+		<dd>
+			<p><input id="mobile" type="text" class="input-common"></p>
+			<p class="error">请输入手机号码</p>
+		</dd>
+	</dl>
+
+	<dl>
+		<dt><span class="color-red">*</span>地址:</dt>
+	</dl>	
+	<div class="container" style="z-index: 10000000">
+		<div class="docs-methods">
+			<form class="form-inline">
+				<div id="distpicker">
+					<div class="form-group">
+						<div style="position: relative;">
+							<input id="city-picker3" class="form-control" readonly type="text" value="" data-toggle="city-picker">
+						</div>
+					</div>
+					<div class="form-group">
+						<button class="btn btn-warning" id="reset" type="button">重置</button>
+						<button class="btn btn-danger" id="destroy" type="button">确定</button>
+					</div>
+				</div>
+			</form>
+		</div>
+	</div>
+		
+	<dl>
+		<dt><span class="color-red">*</span>街道地址:</dt>
+		<dd>
+			<p><input id="address" type="text" class="input-common"></p>
+			<p class="error">请输入街道地址</p>
+		</dd>
+	</dl>
+
+	<dl>
+		<dt><span class="color-red">*</span>订单备注:</dt>
+		<dd>
+			<p><input id="descs" type="text" class="input-common"></p>
+			<p class="error">请输入订单备注</p>
+		</dd>
+	</dl>
+
+
+	
+	
+	<dl>
+		<dt></dt>
+		<dd><button class="btn-common btn-big" onclick="addordersAjax();">提交</button></dd>
+	</dl>
+</div>
+<script type="text/javascript">
+	
+	//模块输入信息验证
+function verify(group_name){
+	if(group_name == ''){
+		$("#ordernum").parent().next().show();
+		$("#ordernum").focus();
+		return false;
+	}else{
+		$(".error").hide();
+	}
+	return true;
+}
+
+var flag = false;//防止重复提交
+//添加模块
+function addordersAjax() {
+	var ordernum = $("#ordernum").val();
+	var startDate = $("#startDate").val();
+	var shouhuouser = $("#shouhuouser").val();
+	var mobile = $("#mobile").val();
+	var citypicker = $("#city-picker3").val();
+	var address = $("#address").val();
+	var descs = $("#descs").val();
+	
+	
+//	if($("#is_visible").prop("checked")){
+//		var is_visible = 1;
+//	}else{
+//		var is_visible = 0;
+//	}
+	var is_visible = 1;
+	
+	if(verify(ordernum)){
+		if(flag){
+			return false;
+		}
+		flag = true;
+		$.ajax({
+			type : "post",
+			url : __URL(ADMINMAIN+"/ordernum/ordernumAdd"),
+			data : {
+				'ordernum' : ordernum,
+				'start_date' : startDate,
+				'shouhuouser' : shouhuouser,
+				'mobile' : mobile,
+				'citypicker' : citypicker,
+				'address' : address,
+				'descs' : descs
+			},
+			success : function(data) {
+				
+				if (data["code"] > 0) {
+					showMessage('success', "订单编号添加成功",__URL(ADMINMAIN+'/ordernum/ordernumlist'));
+				}else{
+					showMessage('error', "订单编号添加失败");
+					flag = false;
+				}
+			}
+		});
+	}
+}
+</script>
+<script src="ADMIN_JS/city-picker.data.js"></script>
+<script src="ADMIN_JS/city-picker.js"></script>
+<script src="ADMIN_JS/main.js"></script>
+{/block}
